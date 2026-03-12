@@ -3,19 +3,29 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { nanoid } from "nanoid";
+import { CHARACTERS, type Rarity } from "./characters";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type Difficulty = "easy" | "medium" | "hard" | "epic";
 export type TaskType = "ponctuelle" | "recurrente";
+export type ChestTier = "common" | "rare" | "epic" | "legendary";
 
 export interface Toast {
   id: string;
-  type: "exp" | "levelup";
+  type: "exp" | "levelup" | "chest";
   exp?: number;
   level?: number;
   taskTitle?: string;
   combo?: number;
+  chestTier?: ChestTier;
+}
+
+export interface ChestResult {
+  characterId: string;
+  isNew: boolean;
+  gold: number;
+  chestTier: ChestTier;
 }
 
 const COMBO_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
@@ -48,6 +58,12 @@ export interface Task {
   createdAt: string;
 }
 
+export interface OwnedCharacter {
+  characterId: string;
+  count: number;
+  ownedAt: string; // ISO date of first acquisition
+}
+
 export interface Profile {
   name: string;
   avatar: string;
@@ -58,6 +74,13 @@ export interface Profile {
   todayTasksDone: number;
   todayEXPEarned: number;
   allTimeTasksDone: number;
+  // Gacha
+  gold: number;
+  chests: Record<ChestTier, number>;
+  ownedCharacters: OwnedCharacter[];
+  // Themes
+  equippedTheme: string | null;
+  purchasedThemes: string[];
 }
 
 // ─── EXP helpers ──────────────────────────────────────────────────────────────
@@ -125,6 +148,77 @@ function yesterdayStr(): string {
   return d.toISOString().slice(0, 10);
 }
 
+// ─── Gacha helpers ────────────────────────────────────────────────────────────
+
+function weightedRandom<T>(items: T[], weights: number[]): T {
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < items.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return items[i];
+  }
+  return items[items.length - 1];
+}
+
+// Rarity distribution per chest tier
+const CHEST_RARITY_WEIGHTS: Record<ChestTier, Record<Rarity, number>> = {
+  common:    { common: 70, rare: 25, epic: 5,  legendary: 0  },
+  rare:      { common: 40, rare: 40, epic: 15, legendary: 5  },
+  epic:      { common: 15, rare: 35, epic: 35, legendary: 15 },
+  legendary: { common: 5,  rare: 15, epic: 40, legendary: 40 },
+};
+
+// Gold range per chest tier [min, max]
+const CHEST_GOLD_RANGE: Record<ChestTier, [number, number]> = {
+  common:    [10,  30],
+  rare:      [30,  80],
+  epic:      [80,  200],
+  legendary: [200, 500],
+};
+
+// Chest drop chance per difficulty
+export const CHEST_DROP_CHANCE: Record<Difficulty, number> = {
+  easy:   0.05,
+  medium: 0.15,
+  hard:   0.35,
+  epic:   0.60,
+};
+
+// Chest tier distribution when a drop occurs
+export const CHEST_DROP_TIER: Record<Difficulty, Record<ChestTier, number>> = {
+  easy:   { common: 90, rare: 10, epic: 0,  legendary: 0  },
+  medium: { common: 60, rare: 35, epic: 5,  legendary: 0  },
+  hard:   { common: 30, rare: 40, epic: 25, legendary: 5  },
+  epic:   { common: 10, rare: 30, epic: 40, legendary: 20 },
+};
+
+function rollChestDrop(difficulty: Difficulty): ChestTier | null {
+  if (Math.random() > CHEST_DROP_CHANCE[difficulty]) return null;
+  const tiers: ChestTier[] = ["common", "rare", "epic", "legendary"];
+  const w = CHEST_DROP_TIER[difficulty];
+  return weightedRandom(tiers, tiers.map((t) => w[t]));
+}
+
+export function rollChestOpen(tier: ChestTier, ownedCharacters: OwnedCharacter[]): ChestResult {
+  // 1. Roll character rarity
+  const rarities: Rarity[] = ["common", "rare", "epic", "legendary"];
+  const rw = CHEST_RARITY_WEIGHTS[tier];
+  const rolledRarity = weightedRandom(rarities, rarities.map((r) => rw[r]));
+
+  // 2. Pick random character of that rarity
+  const pool = CHARACTERS.filter((c) => c.rarity === rolledRarity);
+  const character = pool[Math.floor(Math.random() * pool.length)];
+
+  // 3. Roll gold
+  const [min, max] = CHEST_GOLD_RANGE[tier];
+  const gold = Math.floor(Math.random() * (max - min + 1)) + min;
+
+  // 4. Is it new?
+  const alreadyOwned = ownedCharacters.some((o) => o.characterId === character.id);
+
+  return { characterId: character.id, isNew: !alreadyOwned, gold, chestTier: tier };
+}
+
 // ─── Store ────────────────────────────────────────────────────────────────────
 
 interface StoreState {
@@ -133,6 +227,7 @@ interface StoreState {
   toasts: Toast[];
   combo: number;
   lastComboTime: number; // timestamp ms
+  pendingChestResult: ChestResult | null; // ephemeral — triggers ChestOpenModal
 
   // Actions
   addTask: (input: {
@@ -148,6 +243,10 @@ interface StoreState {
   updateProfile: (updates: Partial<Pick<Profile, "name" | "avatar">>) => void;
   checkDailyReset: () => void;
   dismissToast: (id: string) => void;
+  openChest: (tier: ChestTier) => void;
+  clearPendingChestResult: () => void;
+  buyTheme: (themeId: string, cost: number) => boolean;
+  equipTheme: (themeId: string) => void;
 
   // Derived helpers
   getExpProgress: () => {
@@ -170,6 +269,11 @@ const DEFAULT_PROFILE: Profile = {
   todayTasksDone: 0,
   todayEXPEarned: 0,
   allTimeTasksDone: 0,
+  gold: 0,
+  chests: { common: 0, rare: 0, epic: 0, legendary: 0 },
+  ownedCharacters: [],
+  equippedTheme: null,
+  purchasedThemes: ["default"],
 };
 
 export const useStore = create<StoreState>()(
@@ -180,6 +284,7 @@ export const useStore = create<StoreState>()(
       toasts: [],
       combo: 0,
       lastComboTime: 0,
+      pendingChestResult: null,
 
       isCompletedToday: (task: Task) => task.lastCompletedDate === todayStr(),
 
@@ -246,9 +351,18 @@ export const useStore = create<StoreState>()(
         const newLevel = calcExpProgress(newTotalEXP).level;
         const leveledUp = newLevel > oldLevel;
 
+        // Chest drop
+        const droppedChest = rollChestDrop(task.difficulty);
+
+        // New chests count
+        const newChests = { ...profile.chests };
+        if (droppedChest) newChests[droppedChest] += 1;
+        if (leveledUp) newChests.rare += 1; // Level up bonus
+
         const newToasts: Toast[] = [
           { id: nanoid(), type: "exp", exp: finalExp, taskTitle: task.title, combo: newCombo },
           ...(leveledUp ? [{ id: nanoid(), type: "levelup" as const, level: newLevel }] : []),
+          ...(droppedChest ? [{ id: nanoid(), type: "chest" as const, chestTier: droppedChest }] : []),
         ];
 
         set((s) => ({
@@ -262,6 +376,7 @@ export const useStore = create<StoreState>()(
             todayTasksDone: newTodayDone,
             todayEXPEarned: newTodayEXP,
             allTimeTasksDone: profile.allTimeTasksDone + 1,
+            chests: newChests,
           },
           toasts: [...s.toasts, ...newToasts],
           combo: newCombo,
@@ -285,6 +400,54 @@ export const useStore = create<StoreState>()(
 
       dismissToast: (id: string) => {
         set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
+      },
+
+      openChest: (tier: ChestTier) => {
+        const { profile } = get();
+        if (profile.chests[tier] <= 0) return;
+
+        const result = rollChestOpen(tier, profile.ownedCharacters);
+
+        // Update owned characters
+        const existing = profile.ownedCharacters.find((o) => o.characterId === result.characterId);
+        const newOwned = existing
+          ? profile.ownedCharacters.map((o) =>
+              o.characterId === result.characterId ? { ...o, count: o.count + 1 } : o
+            )
+          : [
+              ...profile.ownedCharacters,
+              { characterId: result.characterId, count: 1, ownedAt: new Date().toISOString() },
+            ];
+
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            chests: { ...s.profile.chests, [tier]: s.profile.chests[tier] - 1 },
+            gold: s.profile.gold + result.gold,
+            ownedCharacters: newOwned,
+          },
+          pendingChestResult: result,
+        }));
+      },
+
+      clearPendingChestResult: () => set({ pendingChestResult: null }),
+
+      buyTheme: (themeId: string, cost: number) => {
+        const { profile } = get();
+        if (profile.purchasedThemes.includes(themeId)) return false;
+        if (profile.gold < cost) return false;
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            gold: s.profile.gold - cost,
+            purchasedThemes: [...s.profile.purchasedThemes, themeId],
+          },
+        }));
+        return true;
+      },
+
+      equipTheme: (themeId: string) => {
+        set((s) => ({ profile: { ...s.profile, equippedTheme: themeId } }));
       },
 
       checkDailyReset: () => {
@@ -316,6 +479,21 @@ export const useStore = create<StoreState>()(
     {
       name: "lifemaxing-store",
       partialize: (s) => ({ tasks: s.tasks, profile: s.profile }),
+      // Deep-merge profile so new fields get their defaults when loading old persisted data
+      merge: (persisted, current) => {
+        const p = persisted as typeof current;
+        return {
+          ...current,
+          ...p,
+          profile: {
+            ...current.profile,
+            ...(p?.profile ?? {}),
+            chests: { ...current.profile.chests, ...(p?.profile?.chests ?? {}) },
+            ownedCharacters: p?.profile?.ownedCharacters ?? current.profile.ownedCharacters,
+            purchasedThemes: p?.profile?.purchasedThemes ?? current.profile.purchasedThemes,
+          },
+        };
+      },
     }
   )
 );

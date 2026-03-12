@@ -1,8 +1,8 @@
 "use client";
 
-import { Check, MoreHorizontal, Repeat2, Calendar, Flame, Trash2 } from "lucide-react";
+import { Check, MoreHorizontal, Repeat2, Calendar, Flame, Trash2, Package } from "lucide-react";
 import { useState } from "react";
-import { type Task, calcEXP } from "@/lib/store";
+import { type Task, calcEXP, CHEST_DROP_CHANCE, CHEST_DROP_TIER } from "@/lib/store";
 
 type Difficulty = Task["difficulty"];
 
@@ -11,6 +11,13 @@ const difficultyConfig: Record<Difficulty, { label: string; color: string; bg: s
   medium: { label: "Medium", color: "var(--exp-blue)",   bg: "rgba(96,165,250,0.08)",  border: "rgba(96,165,250,0.2)",  emoji: "⚡" },
   hard:   { label: "Hard",   color: "var(--exp-orange)", bg: "rgba(251,146,60,0.08)",  border: "rgba(251,146,60,0.2)",  emoji: "🔥" },
   epic:   { label: "Epic",   color: "var(--exp-purple)", bg: "rgba(192,132,252,0.08)", border: "rgba(192,132,252,0.2)", emoji: "💎" },
+};
+
+const dropChestColor: Record<Difficulty, string> = {
+  easy:   "var(--text-muted)",
+  medium: "var(--exp-blue)",
+  hard:   "var(--exp-orange)",
+  epic:   "var(--exp-purple)",
 };
 
 interface TaskCardProps {
@@ -106,6 +113,17 @@ export default function TaskCard({ task, completedToday, onComplete, onDelete }:
             <span className="flex items-center gap-1 text-xs" style={{ color: "var(--exp-orange)" }}>
               <Flame size={10} />
               {task.streak} day streak
+            </span>
+          )}
+
+          {/* Drop chance badge */}
+          {!completedToday && (
+            <span
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+              style={{ background: "var(--bg-hover)", color: dropChestColor[task.difficulty] }}
+            >
+              <Package size={9} />
+              {Math.round(CHEST_DROP_CHANCE[task.difficulty] * 100)}%
             </span>
           )}
 

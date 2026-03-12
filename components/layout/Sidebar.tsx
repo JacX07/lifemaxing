@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, CheckSquare, Settings, Zap, Trophy } from "lucide-react";
+import { LayoutDashboard, CheckSquare, Settings, Zap, Trophy, ShoppingBag, Package } from "lucide-react";
 import { useStore } from "@/lib/store";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/tasks", icon: CheckSquare, label: "Tasks" },
+  { href: "/shop", icon: ShoppingBag, label: "Shop" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
@@ -16,6 +17,7 @@ export default function Sidebar() {
   const profile = useStore((s) => s.profile);
   const getExpProgress = useStore((s) => s.getExpProgress);
   const { level, progressPct, title } = getExpProgress();
+  const totalChests = Object.values(profile.chests).reduce((a, b) => a + b, 0);
 
   return (
     <aside
@@ -97,6 +99,26 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Gold + Chests */}
+      <div className="mx-3 mb-2 flex gap-2">
+        <div
+          className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl"
+          style={{ background: "var(--gold-dim)", border: "1px solid var(--gold-muted)" }}
+        >
+          <span className="text-sm">🪙</span>
+          <span className="text-xs font-bold" style={{ color: "var(--gold)" }}>{profile.gold}</span>
+        </div>
+        <Link
+          href="/shop"
+          className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:opacity-80"
+          style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)" }}
+        >
+          <Package size={12} style={{ color: "var(--exp-purple)" }} />
+          <span className="text-xs font-bold" style={{ color: "var(--exp-purple)" }}>{totalChests}</span>
+          <span className="text-xs" style={{ color: "var(--text-muted)" }}>chests</span>
+        </Link>
+      </div>
 
       {/* Bottom stats */}
       <div

@@ -1,12 +1,14 @@
 "use client";
 
-import { Trophy, Flame, CheckCheck, Star, TrendingUp } from "lucide-react";
+import { Trophy, Flame, CheckCheck, Star, TrendingUp, Package } from "lucide-react";
+import Link from "next/link";
 import { useStore } from "@/lib/store";
 
 export default function ProfileHeader() {
   const profile = useStore((s) => s.profile);
   const getExpProgress = useStore((s) => s.getExpProgress);
   const { level, currentEXP, expToNext, progressPct, title } = getExpProgress();
+  const totalChests = Object.values(profile.chests).reduce((a, b) => a + b, 0);
 
   const stats = [
     { label: "Streak", value: `${profile.streak} days`, icon: Flame, color: "var(--exp-orange)" },
@@ -99,6 +101,30 @@ export default function ProfileHeader() {
             </p>
           </div>
         ))}
+      </div>
+
+      {/* Gold + Chests quick bar */}
+      <div className="flex gap-3 mt-3">
+        <Link
+          href="/shop"
+          className="flex-1 flex items-center justify-between px-4 py-2.5 rounded-xl transition-all hover:opacity-80"
+          style={{ background: "var(--gold-dim)", border: "1px solid var(--gold-muted)" }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-base">🪙</span>
+            <span className="text-sm font-bold" style={{ color: "var(--gold)" }}>{profile.gold} Gold</span>
+          </div>
+          <span className="text-xs" style={{ color: "var(--gold-muted)" }}>→ Shop</span>
+        </Link>
+        <Link
+          href="/shop"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all hover:opacity-80"
+          style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)" }}
+        >
+          <Package size={14} style={{ color: "var(--exp-purple)" }} />
+          <span className="text-sm font-bold" style={{ color: "var(--exp-purple)" }}>{totalChests}</span>
+          <span className="text-xs" style={{ color: "var(--text-muted)" }}>chests</span>
+        </Link>
       </div>
     </div>
   );

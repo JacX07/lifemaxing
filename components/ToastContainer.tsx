@@ -2,11 +2,36 @@
 
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Zap, Trophy } from "lucide-react";
-import { useStore, comboLabel, comboMultiplier } from "@/lib/store";
+import { Zap, Trophy, Package } from "lucide-react";
+import { useStore, comboLabel, comboMultiplier, type ChestTier } from "@/lib/store";
 
 const AUTO_DISMISS_MS = 3000;
 const COMBO_WINDOW_MS = 5 * 60 * 1000;
+
+const CHEST_COLORS: Record<ChestTier, { bg: string; border: string; glow: string; label: string }> = {
+  common:    { bg: "rgba(90,80,64,0.3)",   border: "rgba(90,80,64,0.8)",   glow: "rgba(90,80,64,0.3)",   label: "Common Chest" },
+  rare:      { bg: "rgba(96,165,250,0.15)",border: "rgba(96,165,250,0.5)", glow: "rgba(96,165,250,0.3)", label: "Rare Chest" },
+  epic:      { bg: "rgba(192,132,252,0.15)",border:"rgba(192,132,252,0.5)",glow: "rgba(192,132,252,0.3)", label: "Epic Chest" },
+  legendary: { bg: "rgba(212,168,75,0.15)", border:"rgba(212,168,75,0.6)", glow: "rgba(212,168,75,0.4)", label: "Legendary Chest" },
+};
+
+function ChestToast({ tier }: { tier: ChestTier }) {
+  const c = CHEST_COLORS[tier];
+  return (
+    <div
+      className="flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg"
+      style={{ background: c.bg, border: `1px solid ${c.border}`, boxShadow: `0 0 20px ${c.glow}` }}
+    >
+      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: c.bg }}>
+        <Package size={16} style={{ color: c.border }} />
+      </div>
+      <div>
+        <p className="text-sm font-bold" style={{ color: c.border }}>Chest Drop!</p>
+        <p className="text-xs" style={{ color: "var(--text-muted)" }}>You got a {c.label}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function ToastContainer() {
   const toasts = useStore((s) => s.toasts);
@@ -106,6 +131,8 @@ export default function ToastContainer() {
                   </p>
                 </div>
               </div>
+            ) : toast.type === "chest" ? (
+              <ChestToast tier={toast.chestTier!} />
             ) : (
               <div
                 className="flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg"

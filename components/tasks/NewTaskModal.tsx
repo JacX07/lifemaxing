@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, Zap } from "lucide-react";
-import { useStore, type Difficulty, type TaskType, calcEXP } from "@/lib/store";
+import { useStore, type Difficulty, type TaskType, calcEXP, CHEST_DROP_CHANCE, CHEST_DROP_TIER, type ChestTier } from "@/lib/store";
 
 const DIFFICULTIES: { value: Difficulty; label: string; emoji: string; color: string; bg: string; border: string }[] = [
   { value: "easy",   label: "Easy",   emoji: "🌱", color: "var(--exp-green)",  bg: "rgba(74,222,128,0.08)",  border: "rgba(74,222,128,0.2)" },
@@ -116,22 +116,33 @@ export default function NewTaskModal({ onClose }: Props) {
               Difficulty
             </label>
             <div className="grid grid-cols-4 gap-2">
-              {DIFFICULTIES.map((d) => (
-                <button
-                  key={d.value}
-                  type="button"
-                  onClick={() => setDifficulty(d.value)}
-                  className="flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-medium transition-all"
-                  style={{
-                    background: difficulty === d.value ? d.bg : "var(--bg-elevated)",
-                    border: `1px solid ${difficulty === d.value ? d.border : "var(--border-subtle)"}`,
-                    color: difficulty === d.value ? d.color : "var(--text-muted)",
-                  }}
-                >
-                  <span className="text-base">{d.emoji}</span>
-                  {d.label}
-                </button>
-              ))}
+              {DIFFICULTIES.map((d) => {
+                const dropPct = Math.round(CHEST_DROP_CHANCE[d.value] * 100);
+                const tiers = CHEST_DROP_TIER[d.value];
+                const topTiers = (["legendary", "epic", "rare", "common"] as ChestTier[])
+                  .filter((t) => tiers[t] > 0)
+                  .slice(0, 2)
+                  .map((t) => t.slice(0, 3))
+                  .join("/");
+                return (
+                  <button
+                    key={d.value}
+                    type="button"
+                    onClick={() => setDifficulty(d.value)}
+                    className="flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-xs font-medium transition-all"
+                    style={{
+                      background: difficulty === d.value ? d.bg : "var(--bg-elevated)",
+                      border: `1px solid ${difficulty === d.value ? d.border : "var(--border-subtle)"}`,
+                      color: difficulty === d.value ? d.color : "var(--text-muted)",
+                    }}
+                  >
+                    <span className="text-base">{d.emoji}</span>
+                    <span>{d.label}</span>
+                    <span className="text-xs opacity-70">📦{dropPct}%</span>
+                    <span className="text-xs opacity-50">{topTiers}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
