@@ -8,7 +8,7 @@ import { CHARACTERS, type Rarity } from "./characters";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type Difficulty = "easy" | "medium" | "hard" | "epic";
-export type TaskType = "ponctuelle" | "recurrente";
+export type TaskType = "ponctuelle" | "recurrente" | "hebdomadaire" | "fixe";
 export type ChestTier = "common" | "rare" | "epic" | "legendary";
 
 export interface Toast {
@@ -55,6 +55,13 @@ export interface Task {
   dueDate?: string; // YYYY-MM-DD, for ponctuelle
   streak: number;
   lastCompletedDate?: string; // YYYY-MM-DD
+  weeklyTarget?: number;       // hebdomadaire only: 1-6 completions per week
+  weekCount?: number;          // completions in the current tracking week
+  weekKey?: string;            // YYYY-Www of the current tracking week
+  lastCompletedWeek?: string;  // YYYY-Www when weekly target was last met (for streak)
+  fixedDays?: number[];        // fixe only: [0..6] — 0=Dim, 1=Lun … 6=Sam (JS getDay())
+  fixedStartTime?: string;     // fixe only: "09:00" HH:MM
+  fixedEndTime?: string;       // fixe only: "17:00" HH:MM
   createdAt: string;
 }
 
@@ -95,6 +102,8 @@ const BASE_EXP: Record<Difficulty, number> = {
 export function calcEXP(difficulty: Difficulty, type: TaskType, streak: number): number {
   let exp = BASE_EXP[difficulty];
   if (type === "recurrente") exp *= 1.1;
+  if (type === "fixe")       exp *= 1.1;
+  if (type === "hebdomadaire") exp *= 1.15;
   if (streak >= 30) exp *= 2.0;
   else if (streak >= 14) exp *= 1.5;
   else if (streak >= 7) exp *= 1.25;
@@ -146,6 +155,34 @@ function yesterdayStr(): string {
   const d = new Date();
   d.setDate(d.getDate() - 1);
   return d.toISOString().slice(0, 10);
+}
+
+export function weekKeyStr(d?: Date): string {
+  const date = d ? new Date(d) : new Date();
+  date.setHours(0, 0, 0, 0);
+  const day = date.getDay() || 7;
+  date.setDate(date.getDate() + 4 - day);
+  const yearStart = new Date(date.getFullYear(), 0, 1);
+  const weekNo = Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return `${date.getFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+}
+
+function prevWeekKeyStr(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 7);
+  return weekKeyStr(d);
+}
+
+function prevScheduledDay(fixedDays: number[]): string {
+  const today = new Date();
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    if (fixedDays.includes(d.getDay())) {
+      return d.toISOString().slice(0, 10);
+    }
+  }
+  return "";
 }
 
 // ─── Gacha helpers ────────────────────────────────────────────────────────────
@@ -236,10 +273,14 @@ interface StoreState {
     difficulty: Difficulty;
     category: string;
     dueDate?: string;
+    weeklyTarget?: number;
+    fixedDays?: number[];
+    fixedStartTime?: string;
+    fixedEndTime?: string;
   }) => void;
   completeTask: (id: string) => void;
   deleteTask: (id: string) => void;
-  updateTask: (id: string, updates: Partial<Pick<Task, "title" | "difficulty" | "category" | "dueDate">>) => void;
+  updateTask: (id: string, updates: Partial<Pick<Task, "title" | "difficulty" | "category" | "dueDate" | "weeklyTarget" | "fixedDays" | "fixedStartTime" | "fixedEndTime">>) => void;
   updateProfile: (updates: Partial<Pick<Profile, "name" | "avatar">>) => void;
   checkDailyReset: () => void;
   dismissToast: (id: string) => void;
@@ -286,9 +327,18 @@ export const useStore = create<StoreState>()(
       lastComboTime: 0,
       pendingChestResult: null,
 
-      isCompletedToday: (task: Task) => task.lastCompletedDate === todayStr(),
+      isCompletedToday: (task: Task) => {
+        const today = todayStr();
+        if (task.type === "hebdomadaire") {
+          if (task.lastCompletedDate === today) return true;
+          const currentWeek = weekKeyStr();
+          const weekCount = task.weekKey === currentWeek ? (task.weekCount ?? 0) : 0;
+          return weekCount >= (task.weeklyTarget ?? 2);
+        }
+        return task.lastCompletedDate === today;
+      },
 
-      addTask: ({ title, type, difficulty, category, dueDate }) => {
+      addTask: ({ title, type, difficulty, category, dueDate, weeklyTarget, fixedDays, fixedStartTime, fixedEndTime }) => {
         const task: Task = {
           id: nanoid(),
           title,
@@ -296,6 +346,10 @@ export const useStore = create<StoreState>()(
           difficulty,
           category,
           dueDate,
+          weeklyTarget: type === "hebdomadaire" ? (weeklyTarget ?? 2) : undefined,
+          fixedDays: type === "fixe" ? (fixedDays ?? []) : undefined,
+          fixedStartTime: type === "fixe" ? fixedStartTime : undefined,
+          fixedEndTime: type === "fixe" ? fixedEndTime : undefined,
           streak: 0,
           createdAt: new Date().toISOString(),
         };
@@ -307,18 +361,61 @@ export const useStore = create<StoreState>()(
         const yesterday = yesterdayStr();
         const { tasks, profile } = get();
         const task = tasks.find((t) => t.id === id);
-        if (!task || task.lastCompletedDate === today) return;
+        if (!task) return;
+        if (task.lastCompletedDate === today) return;
+        if (task.type === "hebdomadaire") {
+          const currentWeek = weekKeyStr();
+          const wc = task.weekKey === currentWeek ? (task.weekCount ?? 0) : 0;
+          if (wc >= (task.weeklyTarget ?? 2)) return;
+        }
 
         // Update task streak
-        const isConsecutive = task.lastCompletedDate === yesterday;
-        const newStreak = isConsecutive ? task.streak + 1 : 1;
-        const exp = calcEXP(task.difficulty, task.type, newStreak);
+        let newStreak: number;
+        let updatedTask: Task;
 
-        const updatedTask: Task = {
-          ...task,
-          streak: newStreak,
-          lastCompletedDate: today,
-        };
+        if (task.type === "hebdomadaire") {
+          const currentWeek = weekKeyStr();
+          const isSameWeek = task.weekKey === currentWeek;
+          const prevWeekCount = isSameWeek ? (task.weekCount ?? 0) : 0;
+          const newWeekCount = prevWeekCount + 1;
+          const target = task.weeklyTarget ?? 2;
+          const justMetTarget = newWeekCount === target;
+
+          let lastCompletedWeek = task.lastCompletedWeek;
+          if (justMetTarget) {
+            const isConsecutiveWeek = task.lastCompletedWeek === prevWeekKeyStr();
+            newStreak = isConsecutiveWeek ? task.streak + 1 : 1;
+            lastCompletedWeek = currentWeek;
+          } else {
+            newStreak = task.streak;
+          }
+
+          updatedTask = {
+            ...task,
+            weekKey: currentWeek,
+            weekCount: newWeekCount,
+            lastCompletedDate: today,
+            streak: newStreak,
+            lastCompletedWeek,
+          };
+        } else if (task.type === "fixe") {
+          const todayDayOfWeek = new Date().getDay();
+          if (!task.fixedDays?.includes(todayDayOfWeek)) return; // hors-planning
+          const prevDay = prevScheduledDay(task.fixedDays);
+          const isConsecutive = task.lastCompletedDate === prevDay;
+          newStreak = isConsecutive ? task.streak + 1 : 1;
+          updatedTask = { ...task, streak: newStreak, lastCompletedDate: today };
+        } else {
+          const isConsecutive = task.lastCompletedDate === yesterday;
+          newStreak = isConsecutive ? task.streak + 1 : 1;
+          updatedTask = {
+            ...task,
+            streak: newStreak,
+            lastCompletedDate: today,
+          };
+        }
+
+        const exp = calcEXP(task.difficulty, task.type, newStreak);
 
         // Combo
         const now = Date.now();
@@ -453,13 +550,26 @@ export const useStore = create<StoreState>()(
       checkDailyReset: () => {
         const today = todayStr();
         const yesterday = yesterdayStr();
-        const { profile } = get();
+        const currentWeek = weekKeyStr();
+        const prevWeek = prevWeekKeyStr();
+        const { profile, tasks } = get();
 
         if (profile.lastActiveDate === today) return; // Already checked today
 
-        // Reset today's counters
         const missed = profile.lastActiveDate !== yesterday && profile.lastActiveDate !== "";
+
+        // Reset weekly streaks for tasks that missed their target last week
+        const updatedTasks = tasks.map((t) => {
+          if (t.type !== "hebdomadaire" || t.streak === 0) return t;
+          const lastMet = t.lastCompletedWeek;
+          if (lastMet !== currentWeek && lastMet !== prevWeek) {
+            return { ...t, streak: 0 };
+          }
+          return t;
+        });
+
         set((s) => ({
+          tasks: updatedTasks,
           profile: {
             ...s.profile,
             streak: missed ? 0 : s.profile.streak,
