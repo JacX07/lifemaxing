@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Lock, Check, ShoppingCart } from "lucide-react";
 import { useStore, type ChestTier } from "@/lib/store";
@@ -289,10 +290,14 @@ function PokedexTab() {
                 }}
               >
                 <div
-                  className="w-full aspect-square rounded-lg flex items-center justify-center text-4xl"
+                  className="w-full aspect-square rounded-lg flex items-center justify-center text-4xl overflow-hidden relative"
                   style={{ background: "var(--bg-hover)" }}
                 >
-                  {UNIVERSE_EMOJI[char.universe]}
+                  {char.imageUrl ? (
+                    <Image src={char.imageUrl} alt={char.name} fill className="object-cover" />
+                  ) : (
+                    UNIVERSE_EMOJI[char.universe]
+                  )}
                 </div>
                 <div>
                   <p className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>{char.name}</p>

@@ -141,7 +141,7 @@ export const CHARACTERS: Character[] = [
     name: "Piccolo",
     rarity: "rare",
     universe: "dragonball",
-    imageUrl: null,
+    imageUrl: "/characters/picolo.png",
     description: "Le Namek stoïque. Le meilleur sensei de Gohan.",
   },
   {
