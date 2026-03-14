@@ -66,7 +66,7 @@ export default function SettingsPage() {
                 <button
                   key={a}
                   onClick={() => setAvatar(a)}
-                  className="w-11 h-11 rounded-xl text-xl flex items-center justify-center transition-all"
+                  className="w-11 h-11 rounded-xl text-xl flex items-center justify-center transition-all hover:opacity-80"
                   style={{
                     background: avatar === a ? "var(--gold-dim)" : "var(--bg-elevated)",
                     border: `2px solid ${avatar === a ? "var(--gold)" : "var(--border-subtle)"}`,
@@ -103,7 +103,7 @@ export default function SettingsPage() {
           <button
             onClick={handleSave}
             disabled={!isDirty && !saved}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all enabled:hover:opacity-80"
             style={{
               background: saved ? "rgba(74,222,128,0.15)" : isDirty ? "var(--gold)" : "var(--bg-elevated)",
               border: saved ? "1px solid rgba(74,222,128,0.3)" : isDirty ? "none" : "1px solid var(--border-subtle)",
@@ -169,7 +169,7 @@ export default function SettingsPage() {
           </div>
           <button
             onClick={handleReset}
-            className="px-4 py-2 rounded-xl text-xs font-semibold transition-all flex-shrink-0 ml-4"
+            className="px-4 py-2 rounded-xl text-xs font-semibold transition-all flex-shrink-0 ml-4 hover:opacity-80"
             style={{
               background: confirmReset ? "var(--danger)" : "rgba(248,113,113,0.1)",
               border: "1px solid rgba(248,113,113,0.3)",

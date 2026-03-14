@@ -50,6 +50,7 @@ export default function TasksPage() {
   const [sortKey, setSortKey] = useState<SortKey>("created");
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const { pending, done } = useMemo(() => {
     const base = tasks.filter((t) => {
@@ -83,7 +84,7 @@ export default function TasksPage() {
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold glow-gold"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold glow-gold hover:opacity-80 transition-opacity"
           style={{ background: "var(--gold)", color: "var(--bg-base)" }}
         >
           <Plus size={16} />
@@ -112,7 +113,7 @@ export default function TasksPage() {
         <div className="relative">
           <button
             onClick={() => setShowSortMenu((v) => !v)}
-            className="flex items-center gap-2 px-3 py-3 rounded-xl text-xs font-medium transition-all h-full"
+            className="flex items-center gap-2 px-3 py-3 rounded-xl text-xs font-medium transition-all h-full hover:opacity-80"
             style={{
               background: "var(--bg-surface)",
               border: "1px solid var(--border)",
@@ -155,7 +156,7 @@ export default function TasksPage() {
             <button
               key={t}
               onClick={() => setActiveType(t)}
-              className="px-3 py-1 rounded-full text-xs font-medium transition-all"
+              className="px-3 py-1 rounded-full text-xs font-medium transition-all hover:opacity-80"
               style={{
                 background: activeType === t ? "var(--gold-dim)" : "var(--bg-elevated)",
                 border: `1px solid ${activeType === t ? "var(--gold-muted)" : "var(--border-subtle)"}`,
@@ -172,7 +173,7 @@ export default function TasksPage() {
             <button
               key={c}
               onClick={() => setActiveCategory(c)}
-              className="px-3 py-1 rounded-full text-xs font-medium transition-all"
+              className="px-3 py-1 rounded-full text-xs font-medium transition-all hover:opacity-80"
               style={{
                 background: activeCategory === c ? "var(--bg-hover)" : "var(--bg-elevated)",
                 border: `1px solid ${activeCategory === c ? "var(--border)" : "var(--border-subtle)"}`,
@@ -211,6 +212,7 @@ export default function TasksPage() {
                   completedToday={false}
                   onComplete={completeTask}
                   onDelete={deleteTask}
+                  onEdit={setEditingTask}
                 />
               ))}
             </div>
@@ -238,6 +240,7 @@ export default function TasksPage() {
                     completedToday={true}
                     onComplete={completeTask}
                     onDelete={deleteTask}
+                    onEdit={setEditingTask}
                   />
                 ))}
               </div>
@@ -247,6 +250,7 @@ export default function TasksPage() {
       )}
 
       {modalOpen && <NewTaskModal onClose={() => setModalOpen(false)} />}
+      {editingTask && <NewTaskModal editTask={editingTask} onClose={() => setEditingTask(null)} />}
     </div>
   );
 }

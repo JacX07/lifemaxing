@@ -77,7 +77,7 @@ export default function SchedulePage() {
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold glow-gold"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold glow-gold hover:opacity-80 transition-opacity"
           style={{ background: "var(--gold)", color: "var(--bg-base)" }}
         >
           <Plus size={16} />
@@ -134,7 +134,7 @@ export default function SchedulePage() {
                         <button
                           key={task.id}
                           onClick={() => clickable && completeTask(task.id)}
-                          className="w-full text-left rounded-lg px-2 py-1.5 text-xs transition-all"
+                          className="w-full text-left rounded-lg px-2 py-1.5 text-xs transition-all hover:opacity-80"
                           style={{
                             background: done ? "var(--gold-dim)" : (isToday ? dc.bg : "var(--bg-hover)"),
                             border: `1px solid ${done ? "var(--gold-muted)" : (isToday ? dc.border : "var(--border-subtle)")}`,
@@ -190,7 +190,7 @@ export default function SchedulePage() {
                             <button
                               key={task.id}
                               onClick={() => clickable && completeTask(task.id)}
-                              className="w-full text-left rounded-xl px-3 py-2.5 flex items-center gap-3 transition-all"
+                              className="w-full text-left rounded-xl px-3 py-2.5 flex items-center gap-3 transition-all hover:opacity-80"
                               style={{
                                 background: done ? "var(--gold-dim)" : dc.bg,
                                 border: `1px solid ${done ? "var(--gold-muted)" : dc.border}`,

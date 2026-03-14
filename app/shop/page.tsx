@@ -49,7 +49,7 @@ export default function ShopPage() {
           <button
             key={t}
             onClick={() => setTab(t)}
-            className="px-4 py-1.5 rounded-lg text-sm font-medium transition-all"
+            className="px-4 py-1.5 rounded-lg text-sm font-medium transition-all hover:opacity-80"
             style={{
               background: tab === t ? "var(--gold-dim)" : "transparent",
               border: tab === t ? "1px solid var(--gold-muted)" : "1px solid transparent",
@@ -101,7 +101,7 @@ export default function ShopPage() {
                 <button
                   onClick={() => count > 0 && openChest(tier)}
                   disabled={count === 0}
-                  className="w-full py-2.5 rounded-xl font-semibold text-sm transition-all"
+                  className="w-full py-2.5 rounded-xl font-semibold text-sm transition-all enabled:hover:opacity-80"
                   style={{
                     background: count > 0 ? cfg.glow : "var(--bg-hover)",
                     border: `1px solid ${count > 0 ? cfg.border : "var(--border)"}`,
@@ -154,7 +154,7 @@ export default function ShopPage() {
                   <button
                     onClick={() => !equipped && equipTheme(theme.id)}
                     disabled={equipped}
-                    className="w-full py-2.5 rounded-xl font-semibold text-sm transition-all"
+                    className="w-full py-2.5 rounded-xl font-semibold text-sm transition-all enabled:hover:opacity-80"
                     style={{
                       background: equipped ? "var(--gold-dim)" : "var(--bg-hover)",
                       border: `1px solid ${equipped ? "var(--gold-muted)" : "var(--border)"}`,
@@ -168,7 +168,7 @@ export default function ShopPage() {
                   <button
                     onClick={() => canAfford && buyTheme(theme.id, theme.cost)}
                     disabled={!canAfford}
-                    className="w-full py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2"
+                    className="w-full py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 enabled:hover:opacity-80"
                     style={{
                       background: canAfford ? "var(--gold-dim)" : "var(--bg-hover)",
                       border: `1px solid ${canAfford ? "var(--gold-muted)" : "var(--border)"}`,
@@ -267,7 +267,7 @@ function PokedexTab() {
           <button
             key={id}
             onClick={() => setUniverseFilter(id as Universe | "all")}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80"
             style={{
               background: universeFilter === id ? "var(--gold-dim)" : "var(--bg-elevated)",
               border: `1px solid ${universeFilter === id ? "var(--gold-muted)" : "var(--border-subtle)"}`,

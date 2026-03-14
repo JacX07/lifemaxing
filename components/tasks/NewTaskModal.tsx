@@ -85,7 +85,7 @@ export default function NewTaskModal({ onClose, editTask, defaultType }: Props) 
           </h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:opacity-80"
             style={{ background: "var(--bg-elevated)", color: "var(--text-muted)" }}
           >
             <X size={16} />
@@ -132,7 +132,7 @@ export default function NewTaskModal({ onClose, editTask, defaultType }: Props) 
                   key={t.value}
                   type="button"
                   onClick={() => setType(t.value)}
-                  className="px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
+                  className="px-3 py-2.5 rounded-xl text-sm font-medium transition-all hover:opacity-80"
                   style={{
                     background: type === t.value ? "var(--gold-dim)" : "var(--bg-elevated)",
                     border: `1px solid ${type === t.value ? "var(--gold-muted)" : "var(--border-subtle)"}`,
@@ -158,7 +158,7 @@ export default function NewTaskModal({ onClose, editTask, defaultType }: Props) 
                   key={n}
                   type="button"
                   onClick={() => setWeeklyTarget(n)}
-                  className="flex-1 py-2 rounded-xl text-sm font-semibold transition-all"
+                  className="flex-1 py-2 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
                   style={{
                     background: weeklyTarget === n ? "var(--gold-dim)" : "var(--bg-elevated)",
                     border: `1px solid ${weeklyTarget === n ? "var(--gold-muted)" : "var(--border-subtle)"}`,
@@ -194,7 +194,7 @@ export default function NewTaskModal({ onClose, editTask, defaultType }: Props) 
                       key={value}
                       type="button"
                       onClick={() => setFixedDays(active ? fixedDays.filter((d) => d !== value) : [...fixedDays, value])}
-                      className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+                      className="flex-1 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-80"
                       style={{
                         background: active ? "var(--gold-dim)" : "var(--bg-elevated)",
                         border: `1px solid ${active ? "var(--gold-muted)" : "var(--border-subtle)"}`,
@@ -257,7 +257,7 @@ export default function NewTaskModal({ onClose, editTask, defaultType }: Props) 
                     key={d.value}
                     type="button"
                     onClick={() => setDifficulty(d.value)}
-                    className="flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-xs font-medium transition-all"
+                    className="flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-xs font-medium transition-all hover:opacity-80"
                     style={{
                       background: difficulty === d.value ? d.bg : "var(--bg-elevated)",
                       border: `1px solid ${difficulty === d.value ? d.border : "var(--border-subtle)"}`,
@@ -285,7 +285,7 @@ export default function NewTaskModal({ onClose, editTask, defaultType }: Props) 
                   key={c}
                   type="button"
                   onClick={() => setCategory(c)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80"
                   style={{
                     background: category === c ? "var(--bg-hover)" : "var(--bg-elevated)",
                     border: `1px solid ${category === c ? "var(--border)" : "var(--border-subtle)"}`,
@@ -333,7 +333,7 @@ export default function NewTaskModal({ onClose, editTask, defaultType }: Props) 
             <button
               type="submit"
               disabled={!canSubmit}
-              className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all"
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all enabled:hover:opacity-80"
               style={{
                 background: canSubmit ? "var(--gold)" : "var(--bg-elevated)",
                 color: canSubmit ? "var(--bg-base)" : "var(--text-muted)",

@@ -26,7 +26,7 @@ export default function BottomNav() {
           <Link
             key={href}
             href={href}
-            className="flex-1 flex flex-col items-center justify-center gap-1 py-3"
+            className="flex-1 flex flex-col items-center justify-center gap-1 py-3 hover:opacity-70 transition-opacity"
             style={{ color: active ? "var(--gold)" : "var(--text-muted)" }}
           >
             <Icon size={20} />

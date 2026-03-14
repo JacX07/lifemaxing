@@ -114,7 +114,7 @@ export default function ChestOpenModal() {
 
             <button
               onClick={handleOpen}
-              className="w-full py-3 rounded-xl font-bold text-sm"
+              className="w-full py-3 rounded-xl font-bold text-sm hover:opacity-80 transition-opacity"
               style={{ background: chestCfg.border, color: "var(--bg-base)" }}
             >
               Open!

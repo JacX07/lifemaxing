@@ -198,7 +198,7 @@ export default function TaskCard({ task, completedToday, onComplete, onDelete, o
       <div className="relative flex-shrink-0">
         <button
           onClick={() => setMenuOpen((o) => !o)}
-          className="w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          className="w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:opacity-80"
           style={{ background: "var(--bg-hover)", color: "var(--text-muted)" }}
         >
           <MoreHorizontal size={14} />
