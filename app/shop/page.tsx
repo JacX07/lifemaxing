@@ -77,7 +77,7 @@ export default function ShopPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {cfg.iconUrl ? (
-                      <Image src={cfg.iconUrl} alt={cfg.label} width={72} height={72} className="object-contain flex-shrink-0" />
+                      <Image src={cfg.iconUrl} alt={cfg.label} width={108} height={108} className="object-contain flex-shrink-0" />
                     ) : (
                       <span className="text-3xl">{cfg.emoji}</span>
                     )}
