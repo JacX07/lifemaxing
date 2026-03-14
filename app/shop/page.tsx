@@ -63,7 +63,7 @@ export default function ShopPage() {
 
       {/* Chest Tab */}
       {tab === "gacha" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           {TIERS.map((tier) => {
             const cfg = CHEST_CONFIG[tier];
             const count = profile.chests[tier];
@@ -71,29 +71,33 @@ export default function ShopPage() {
               <motion.div
                 key={tier}
                 whileHover={count > 0 ? { scale: 1.02 } : {}}
-                className="rounded-2xl p-5 flex flex-col gap-4"
+                className="rounded-2xl p-4 flex flex-col items-center gap-3 text-center"
                 style={{ background: "var(--bg-elevated)", border: `1px solid ${cfg.border}`, boxShadow: `0 0 20px ${cfg.glow}` }}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {cfg.iconUrl ? (
-                      <Image src={cfg.iconUrl} alt={cfg.label} width={108} height={108} className="object-contain flex-shrink-0" />
-                    ) : (
-                      <span className="text-3xl">{cfg.emoji}</span>
-                    )}
-                    <div>
-                      <p className="font-bold" style={{ color: cfg.color }}>{cfg.label} Chest</p>
-                      <p className="text-xs" style={{ color: "var(--text-muted)" }}>{cfg.desc}</p>
-                    </div>
-                  </div>
-                  <div
-                    className="px-3 py-1 rounded-lg text-sm font-bold"
-                    style={{ background: count > 0 ? `${cfg.glow}` : "var(--bg-hover)", color: count > 0 ? cfg.color : "var(--text-muted)", border: `1px solid ${count > 0 ? cfg.border : "var(--border)"}` }}
-                  >
-                    ×{count}
-                  </div>
+                {/* Image centrée */}
+                <div className="flex items-center justify-center h-32">
+                  {cfg.iconUrl ? (
+                    <Image src={cfg.iconUrl} alt={cfg.label} width={128} height={128} className="object-contain" />
+                  ) : (
+                    <span className="text-6xl">{cfg.emoji}</span>
+                  )}
                 </div>
 
+                {/* Titre + count */}
+                <div className="flex items-center gap-2">
+                  <p className="font-bold" style={{ color: cfg.color }}>{cfg.label} Chest</p>
+                  <span
+                    className="px-2 py-0.5 rounded-lg text-xs font-bold"
+                    style={{ background: count > 0 ? cfg.glow : "var(--bg-hover)", color: count > 0 ? cfg.color : "var(--text-muted)", border: `1px solid ${count > 0 ? cfg.border : "var(--border)"}` }}
+                  >
+                    ×{count}
+                  </span>
+                </div>
+
+                {/* Description */}
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>{cfg.desc}</p>
+
+                {/* Bouton */}
                 <button
                   onClick={() => count > 0 && openChest(tier)}
                   disabled={count === 0}
@@ -106,7 +110,7 @@ export default function ShopPage() {
                     opacity: count > 0 ? 1 : 0.5,
                   }}
                 >
-                  {count > 0 ? `Open ${cfg.label} Chest` : "No chests available"}
+                  {count > 0 ? `Open ${cfg.label} Chest` : "No chests"}
                 </button>
               </motion.div>
             );
