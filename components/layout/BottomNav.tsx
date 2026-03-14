@@ -18,7 +18,7 @@ export default function BottomNav() {
   return (
     <nav
       className="sm:hidden fixed bottom-0 left-0 right-0 z-40 flex border-t"
-      style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
+      style={{ background: "var(--bg-surface)", borderColor: "var(--border)", paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {navItems.map(({ href, icon: Icon, label }) => {
         const active = pathname === href || pathname.startsWith(href + "/");

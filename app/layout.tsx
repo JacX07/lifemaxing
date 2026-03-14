@@ -12,6 +12,7 @@ const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "LifeMaxing",
   description: "Gamified productivity — level up your life",
+  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
