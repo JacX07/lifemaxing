@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, CheckSquare, Settings, Zap, Trophy, ShoppingBag, Package } from "lucide-react";
+import { LayoutDashboard, CheckSquare, Settings, Zap, Trophy, ShoppingBag, Package, CalendarDays } from "lucide-react";
 import { useStore } from "@/lib/store";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/tasks", icon: CheckSquare, label: "Tasks" },
-  { href: "/shop", icon: ShoppingBag, label: "Shop" },
-  { href: "/settings", icon: Settings, label: "Settings" },
+  { href: "/tasks",     icon: CheckSquare,     label: "Tasks"     },
+  { href: "/schedule",  icon: CalendarDays,    label: "Schedule"  },
+  { href: "/shop",      icon: ShoppingBag,     label: "Shop"      },
+  { href: "/settings",  icon: Settings,        label: "Settings"  },
 ];
 
 export default function Sidebar() {
