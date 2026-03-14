@@ -13,7 +13,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       {!hideSidebar && <Sidebar />}
       <main className={`flex-1 overflow-y-auto bg-grid${hideSidebar ? " w-full" : ""}`}>
         {children}
-        <div className="sm:hidden h-40" aria-hidden="true" />
+        <div className="sm:hidden h-28" aria-hidden="true" />
       </main>
       {!hideSidebar && <BottomNav />}
     </>
