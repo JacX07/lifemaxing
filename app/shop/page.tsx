@@ -8,11 +8,11 @@ import { useStore, type ChestTier } from "@/lib/store";
 import { CHARACTERS, CHARACTERS_BY_ID, type Universe } from "@/lib/characters";
 import { THEMES } from "@/lib/themes";
 
-const CHEST_CONFIG: Record<ChestTier, { label: string; color: string; border: string; glow: string; emoji: string; desc: string }> = {
-  common:    { label: "Common",    color: "var(--text-secondary)", border: "var(--border)",       glow: "rgba(90,80,64,0.2)",   emoji: "📦", desc: "Mostly common characters" },
-  rare:      { label: "Rare",      color: "var(--exp-blue)",       border: "rgba(96,165,250,0.4)", glow: "rgba(96,165,250,0.2)", emoji: "💎", desc: "A mix of common & rare" },
-  epic:      { label: "Epic",      color: "var(--exp-purple)",     border: "rgba(192,132,252,0.4)",glow: "rgba(192,132,252,0.2)",emoji: "🔮", desc: "Rare & epic characters" },
-  legendary: { label: "Legendary", color: "var(--gold)",           border: "var(--gold-muted)",   glow: "rgba(212,168,75,0.3)", emoji: "👑", desc: "Epic & legendary characters" },
+const CHEST_CONFIG: Record<ChestTier, { label: string; color: string; border: string; glow: string; emoji: string; desc: string; iconUrl: string | null }> = {
+  common:    { label: "Common",    color: "var(--text-secondary)", border: "var(--border)",        glow: "rgba(90,80,64,0.2)",   emoji: "📦", desc: "Mostly common characters",    iconUrl: null },
+  rare:      { label: "Rare",      color: "var(--exp-blue)",       border: "rgba(96,165,250,0.4)", glow: "rgba(96,165,250,0.2)", emoji: "💎", desc: "A mix of common & rare",      iconUrl: "/icons/rare_chest-removebg-preview.png" },
+  epic:      { label: "Epic",      color: "var(--exp-purple)",     border: "rgba(192,132,252,0.4)",glow: "rgba(192,132,252,0.2)",emoji: "🔮", desc: "Rare & epic characters",      iconUrl: null },
+  legendary: { label: "Legendary", color: "var(--gold)",           border: "var(--gold-muted)",    glow: "rgba(212,168,75,0.3)", emoji: "👑", desc: "Epic & legendary characters", iconUrl: null },
 };
 
 const TIERS: ChestTier[] = ["common", "rare", "epic", "legendary"];
@@ -76,7 +76,13 @@ export default function ShopPage() {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="text-3xl">{cfg.emoji}</span>
+                    {cfg.iconUrl ? (
+                      <div className="relative w-12 h-12 flex-shrink-0">
+                        <Image src={cfg.iconUrl} alt={cfg.label} fill className="object-contain" />
+                      </div>
+                    ) : (
+                      <span className="text-3xl">{cfg.emoji}</span>
+                    )}
                     <div>
                       <p className="font-bold" style={{ color: cfg.color }}>{cfg.label} Chest</p>
                       <p className="text-xs" style={{ color: "var(--text-muted)" }}>{cfg.desc}</p>
