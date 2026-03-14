@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, MoreHorizontal, Repeat2, Calendar, Flame, Trash2, Package } from "lucide-react";
+import { Check, MoreHorizontal, Repeat2, Calendar, Flame, Trash2, Package, Pencil } from "lucide-react";
 import { useState } from "react";
 import { type Task, calcEXP, CHEST_DROP_CHANCE, CHEST_DROP_TIER } from "@/lib/store";
 
@@ -25,9 +25,12 @@ interface TaskCardProps {
   completedToday: boolean;
   onComplete: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdit?: (task: Task) => void;
 }
 
-export default function TaskCard({ task, completedToday, onComplete, onDelete }: TaskCardProps) {
+const DAY_SHORT = ["D", "L", "M", "M", "J", "V", "S"]; // index = getDay()
+
+export default function TaskCard({ task, completedToday, onComplete, onDelete, onEdit }: TaskCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const diff = difficultyConfig[task.difficulty];
 
@@ -38,6 +41,9 @@ export default function TaskCard({ task, completedToday, onComplete, onDelete }:
   const formattedDue = task.dueDate
     ? new Date(task.dueDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })
     : undefined;
+
+  // For fixe tasks: disable checkbox on non-scheduled days
+  const isScheduledToday = task.type !== "fixe" || (task.fixedDays?.includes(new Date().getDay()) ?? false);
 
   return (
     <div
@@ -50,12 +56,13 @@ export default function TaskCard({ task, completedToday, onComplete, onDelete }:
     >
       {/* Checkbox */}
       <button
-        onClick={() => !completedToday && onComplete(task.id)}
+        onClick={() => !completedToday && isScheduledToday && onComplete(task.id)}
         className="flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-150"
         style={{
           borderColor: completedToday ? "var(--gold-muted)" : "var(--border)",
           background: completedToday ? "var(--gold-dim)" : "transparent",
-          cursor: completedToday ? "default" : "pointer",
+          cursor: completedToday || !isScheduledToday ? "default" : "pointer",
+          opacity: !isScheduledToday && !completedToday ? 0.35 : 1,
         }}
       >
         {completedToday && <Check size={12} style={{ color: "var(--gold)" }} />}
@@ -116,6 +123,57 @@ export default function TaskCard({ task, completedToday, onComplete, onDelete }:
             </span>
           )}
 
+          {/* Weekly progress */}
+          {task.type === "hebdomadaire" && (() => {
+            const today = new Date().toISOString().slice(0, 10);
+            const d = new Date(); d.setHours(0,0,0,0);
+            const day = d.getDay() || 7;
+            d.setDate(d.getDate() + 4 - day);
+            const ys = new Date(d.getFullYear(), 0, 1);
+            const wn = Math.ceil(((d.getTime() - ys.getTime()) / 86400000 + 1) / 7);
+            const currentWeek = `${d.getFullYear()}-W${String(wn).padStart(2,"0")}`;
+            const count = task.weekKey === currentWeek ? (task.weekCount ?? 0) : 0;
+            const target = task.weeklyTarget ?? 2;
+            const done = count >= target;
+            return (
+              <span className="flex items-center gap-1 text-xs" style={{ color: done ? "var(--exp-green)" : "var(--text-muted)" }}>
+                📅 {count}/{target}
+              </span>
+            );
+          })()}
+
+          {task.type === "hebdomadaire" && task.streak > 0 && (
+            <span className="flex items-center gap-1 text-xs" style={{ color: "var(--exp-orange)" }}>
+              <Flame size={10} />
+              {task.streak} week streak
+            </span>
+          )}
+
+          {/* Fixe: scheduled days badge */}
+          {task.type === "fixe" && task.fixedDays && task.fixedDays.length > 0 && (
+            <span
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs"
+              style={{ background: "var(--bg-hover)", color: "var(--text-muted)" }}
+            >
+              📅 {[1,2,3,4,5,6,0].filter((d) => task.fixedDays!.includes(d)).map((d) => DAY_SHORT[d]).join(" ")}
+            </span>
+          )}
+
+          {/* Fixe: time badge */}
+          {task.type === "fixe" && task.fixedStartTime && (
+            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+              {task.fixedStartTime}→{task.fixedEndTime}
+            </span>
+          )}
+
+          {/* Fixe: streak */}
+          {task.type === "fixe" && task.streak > 0 && (
+            <span className="flex items-center gap-1 text-xs" style={{ color: "var(--exp-orange)" }}>
+              <Flame size={10} />
+              {task.streak} day streak
+            </span>
+          )}
+
           {/* Drop chance badge */}
           {!completedToday && (
             <span
@@ -128,7 +186,7 @@ export default function TaskCard({ task, completedToday, onComplete, onDelete }:
           )}
 
           {/* Recurrence icon */}
-          {task.type === "recurrente" && (
+          {(task.type === "recurrente" || task.type === "hebdomadaire") && (
             <span className="ml-auto">
               <Repeat2 size={12} style={{ color: "var(--text-muted)" }} />
             </span>
@@ -151,6 +209,18 @@ export default function TaskCard({ task, completedToday, onComplete, onDelete }:
             className="absolute right-0 top-8 z-10 rounded-lg overflow-hidden shadow-lg"
             style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", minWidth: "120px" }}
           >
+            {onEdit && (
+              <button
+                onClick={() => { onEdit(task); setMenuOpen(false); }}
+                className="flex items-center gap-2 px-3 py-2 w-full text-left text-sm transition-colors"
+                style={{ color: "var(--text-secondary)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-hover)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <Pencil size={12} />
+                Edit
+              </button>
+            )}
             <button
               onClick={() => { onDelete(task.id); setMenuOpen(false); }}
               className="flex items-center gap-2 px-3 py-2 w-full text-left text-sm transition-colors"
