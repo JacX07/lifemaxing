@@ -22,7 +22,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="w-60 flex-shrink-0 flex flex-col border-r"
+      className="hidden sm:flex w-60 flex-shrink-0 flex-col border-r"
       style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
     >
       {/* Logo */}
