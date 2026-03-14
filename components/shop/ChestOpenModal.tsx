@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStore } from "@/lib/store";
 import { CHARACTERS_BY_ID } from "@/lib/characters";
@@ -82,10 +83,14 @@ export default function ChestOpenModal() {
             initial={{ scale: 0, rotate: -20 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ delay: 0.15, type: "spring", stiffness: 250, damping: 15 }}
-            className="w-28 h-28 rounded-2xl flex items-center justify-center text-6xl"
+            className="w-28 h-28 rounded-2xl flex items-center justify-center text-6xl overflow-hidden relative"
             style={{ background: "var(--bg-elevated)", border: `2px solid ${cfg.border}`, boxShadow: cfg.glow }}
           >
-            {UNIVERSE_EMOJI[char.universe] ?? "✨"}
+            {char.imageUrl ? (
+              <Image src={char.imageUrl} alt={char.name} fill className="object-contain" />
+            ) : (
+              UNIVERSE_EMOJI[char.universe] ?? "✨"
+            )}
           </motion.div>
 
           {/* Name + universe */}

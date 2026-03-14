@@ -294,7 +294,7 @@ function PokedexTab() {
                   style={{ background: "var(--bg-hover)" }}
                 >
                   {char.imageUrl ? (
-                    <Image src={char.imageUrl} alt={char.name} fill className="object-cover" />
+                    <Image src={char.imageUrl} alt={char.name} fill className="object-contain" />
                   ) : (
                     UNIVERSE_EMOJI[char.universe]
                   )}
