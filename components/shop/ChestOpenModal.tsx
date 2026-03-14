@@ -21,11 +21,12 @@ const UNIVERSE_EMOJI: Record<string, string> = {
   rickmorty: "🌀",
 };
 
-const CHEST_EMOJI: Record<string, string> = {
-  common: "📦",
-  rare: "💎",
-  epic: "🔮",
-  legendary: "👑",
+// Config basée sur le TIER DU COFFRE (pas la rareté du perso)
+const CHEST_TIER_CONFIG = {
+  common:    { color: "var(--text-secondary)", bg: "rgba(90,80,64,0.2)",   border: "rgba(90,80,64,0.6)",   label: "Common",    glow: "",                              emoji: "📦", iconUrl: null },
+  rare:      { color: "var(--exp-blue)",       bg: "rgba(96,165,250,0.1)", border: "rgba(96,165,250,0.5)", label: "Rare",      glow: "0 0 40px rgba(96,165,250,0.3)", emoji: "💎", iconUrl: "/icons/rare_chest-removebg-preview.png" },
+  epic:      { color: "var(--exp-purple)",     bg: "rgba(192,132,252,0.1)",border: "rgba(192,132,252,0.5)",label: "Epic",      glow: "0 0 60px rgba(192,132,252,0.4)",emoji: "🔮", iconUrl: null },
+  legendary: { color: "var(--gold)",           bg: "rgba(212,168,75,0.15)",border: "var(--gold-muted)",    label: "Legendary", glow: "0 0 80px rgba(212,168,75,0.5)", emoji: "👑", iconUrl: null },
 };
 
 const PARTICLES = [
@@ -53,7 +54,8 @@ export default function ChestOpenModal() {
   const char = CHARACTERS_BY_ID[result.characterId];
   if (!char) return null;
 
-  const cfg = RARITY_CONFIG[char.rarity];
+  const chestCfg = CHEST_TIER_CONFIG[result.chestTier]; // pour phase 1 (coffre)
+  const cfg = RARITY_CONFIG[char.rarity];               // pour phase 3 (perso)
 
   function handleOpen() {
     setPhase("flash");
@@ -81,25 +83,29 @@ export default function ChestOpenModal() {
             initial={{ scale: 0.7, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 280, damping: 20 }}
-            style={{ background: cfg.bg, border: `2px solid ${cfg.border}`, boxShadow: cfg.glow }}
+            style={{ background: chestCfg.bg, border: `2px solid ${chestCfg.border}`, boxShadow: chestCfg.glow }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Rarity label */}
+            {/* Chest tier label */}
             <div
               className="px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider"
-              style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}
+              style={{ background: chestCfg.bg, border: `1px solid ${chestCfg.border}`, color: chestCfg.color }}
             >
-              {cfg.label} Chest
+              {chestCfg.label} Chest
             </div>
 
             {/* Coffre animé */}
             <motion.div
-              animate={{ y: [0, -8, 0], boxShadow: [cfg.glow, cfg.glow.replace("0.5", "0.8"), cfg.glow] }}
+              animate={{ y: [0, -8, 0] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              className="w-36 h-36 rounded-2xl flex items-center justify-center"
-              style={{ background: "var(--bg-elevated)", border: `2px solid ${cfg.border}` }}
+              className="w-44 h-44 rounded-2xl flex items-center justify-center overflow-hidden relative"
+              style={{ background: "var(--bg-elevated)", border: `2px solid ${chestCfg.border}`, boxShadow: chestCfg.glow }}
             >
-              <span className="text-7xl">{CHEST_EMOJI[result.chestTier] ?? "📦"}</span>
+              {chestCfg.iconUrl ? (
+                <Image src={chestCfg.iconUrl} alt={chestCfg.label} fill className="object-contain p-2" />
+              ) : (
+                <span className="text-8xl">{chestCfg.emoji}</span>
+              )}
             </motion.div>
 
             <p className="text-sm text-center" style={{ color: "var(--text-muted)" }}>
@@ -109,7 +115,7 @@ export default function ChestOpenModal() {
             <button
               onClick={handleOpen}
               className="w-full py-3 rounded-xl font-bold text-sm"
-              style={{ background: cfg.border, color: "var(--bg-base)" }}
+              style={{ background: chestCfg.border, color: "var(--bg-base)" }}
             >
               Open!
             </button>

@@ -75,11 +75,11 @@ export default function ShopPage() {
                 style={{ background: "var(--bg-elevated)", border: `1px solid ${cfg.border}`, boxShadow: `0 0 20px ${cfg.glow}` }}
               >
                 {/* Image centrée */}
-                <div className="flex items-center justify-center h-32">
+                <div className="flex items-center justify-center h-40">
                   {cfg.iconUrl ? (
-                    <Image src={cfg.iconUrl} alt={cfg.label} width={128} height={128} className="object-contain" />
+                    <Image src={cfg.iconUrl} alt={cfg.label} width={160} height={160} className="object-contain" />
                   ) : (
-                    <span className="text-6xl">{cfg.emoji}</span>
+                    <span className="text-7xl">{cfg.emoji}</span>
                   )}
                 </div>
 
