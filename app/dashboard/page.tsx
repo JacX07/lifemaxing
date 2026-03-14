@@ -25,7 +25,11 @@ export default function DashboardPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
 
-  const dailyTasks = tasks.filter((t) => t.type === "recurrente");
+  const todayDayOfWeek = new Date().getDay();
+  const dailyTasks = tasks.filter(
+    (t) => t.type === "recurrente" ||
+           (t.type === "fixe" && t.fixedDays?.includes(todayDayOfWeek))
+  );
   const dailyDone = dailyTasks.filter((t) => isCompletedToday(t)).length;
   const dailyPct = dailyTasks.length > 0 ? Math.round((dailyDone / dailyTasks.length) * 100) : 0;
 
